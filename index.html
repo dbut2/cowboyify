@@ -1,19 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cowboyify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            margin-top: 20px;
+            color: #333;
+        }
+        #controls {
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        button, .file-upload-btn {
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover, .file-upload-btn:hover {
+            background-color: #45a049;
+        }
+        canvas, img {
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+        #outputImage {
+            display: none; /* Hide the image until download button is clicked */
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-<h1>Cowboyify Your Image</h1>
-<input type="file" id="imageUpload" accept="image/*" />
-<button id="downloadBtn">Download Image</button>
-<canvas id="canvas" width="1000" height="1000"></canvas>
+<h1>Cowboyify</h1>
+<div id="controls">
+    <label class="file-upload-btn" for="imageUpload">Choose Image</label>
+    <input type="file" id="imageUpload" accept="image/*">
+    <button id="downloadBtn">Download Image</button>
+</div>
+<canvas id="canvas"></canvas>
+<img id="outputImage" src="" alt="Cowboyified Image">
 
 <script>
     var canvas;
     document.getElementById('imageUpload').addEventListener('change', function(e) {
-        canvas = new fabric.Canvas('canvas');
+        if (!canvas) {
+            canvas = new fabric.Canvas('canvas');
+        } else {
+            canvas.clear();
+        }
         var reader = new FileReader();
 
         reader.onload = function(event) {
@@ -22,50 +83,56 @@
 
             imgObj.onload = function() {
                 var image = new fabric.Image(imgObj);
+                image.set({
+                    left: 0,
+                    top: 0,
+                    angle: 0,
+                    selectable: false
+                });
                 image.scaleToWidth(canvas.width);
-                image.selectable = false; // Disable transformations
                 canvas.add(image);
                 canvas.renderAll();
 
+                // Loading a cowboy hat image to be added on the canvas
                 fabric.Image.fromURL('/cowboy_hat.png', function(hat) {
-                    hat.scaleToWidth(canvas.width / 4);
-                    hat.top = (hat.height - canvas.height) / 2; // Center vertically
-                    hat.left = (hat.width - canvas.width) / 2; // Center horizontally
+                    hat.scaleToWidth(canvas.width * 0.5);
+                    hat.set({
+                        left: canvas.width / 2 - hat.getScaledWidth() / 2,
+                        top: canvas.height / 3 - hat.getScaledHeight() / 2,
+                        selectable: true // Make the hat selectable and movable
+                    });
                     canvas.add(hat);
-                    canvas.bringToFront(hat); // Bring the hat to the top z layer
                     canvas.renderAll();
-                    console.log(canvas);
                 });
-            }
-        }
+            };
+        };
 
         reader.readAsDataURL(e.target.files[0]);
     });
 
     document.getElementById('downloadBtn').addEventListener('click', function() {
-        // Temporarily disable bounding box and controls
-        var objects = canvas.getObjects();
-        for (var i in objects) {
-            objects[i].hasBorders = objects[i].hasControls = false;
-        }
-
-        // Create data URL and start download
-        var dataURL = canvas.toDataURL('image/png');
-        var link = document.createElement('a');
-        link.href = dataURL;
-        link.download = 'cowboyified.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Re-enable bounding box and controls
-        for (var i in objects) {
-            objects[i].hasBorders = objects[i].hasControls = true;
-        }
-
-        // Redraw the canvas to show the bounding box and controls again
-        canvas.renderAll();
+        // Generate the download image only when the download button is clicked
+        var img = document.getElementById('outputImage');
+        img.src = canvas.toDataURL('image/png');
+        img.style.display = 'block'; // Show the image for downloading
+        canvas.wrapperEl.style.display = 'none'; // Hide the canvas for downloading
     });
+
+    window.addEventListener('resize', resizeCanvas, false);
+    function resizeCanvas() {
+        const canvasElem = document.getElementById('canvas');
+        const maxWidth = window.innerWidth * 0.9;
+        const maxHeight = (window.innerHeight - document.querySelector('h1').offsetHeight - document.querySelector('#controls').offsetHeight) * 0.95;
+        const size = Math.min(maxWidth, maxHeight);
+        canvasElem.width = size;
+        canvasElem.height = size;
+        if (canvas) {
+            canvas.setWidth(size);
+            canvas.setHeight(size);
+            canvas.renderAll();
+        }
+    }
+    resizeCanvas();
 </script>
 </body>
 </html>

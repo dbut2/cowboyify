@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cowboyify</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+</head>
+<body>
+<h1>Cowboyify Your Image</h1>
+<input type="file" id="imageUpload" accept="image/*" />
+<button id="downloadBtn">Download Image</button>
+<canvas id="canvas" width="1000" height="1000"></canvas>
+
+<script>
+    var canvas;
+    document.getElementById('imageUpload').addEventListener('change', function(e) {
+        canvas = new fabric.Canvas('canvas');
+        var reader = new FileReader();
+
+        reader.onload = function(event) {
+            var imgObj = new Image();
+            imgObj.src = event.target.result;
+
+            imgObj.onload = function() {
+                var image = new fabric.Image(imgObj);
+                image.scaleToWidth(canvas.width);
+                image.selectable = false; // Disable transformations
+                canvas.add(image);
+                canvas.renderAll();
+
+                fabric.Image.fromURL('/cowboy_hat.png', function(hat) {
+                    hat.scaleToWidth(canvas.width / 4);
+                    hat.top = (hat.height - canvas.height) / 2; // Center vertically
+                    hat.left = (hat.width - canvas.width) / 2; // Center horizontally
+                    canvas.add(hat);
+                    canvas.bringToFront(hat); // Bring the hat to the top z layer
+                    canvas.renderAll();
+                    console.log(canvas);
+                });
+            }
+        }
+
+        reader.readAsDataURL(e.target.files[0]);
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        // Temporarily disable bounding box and controls
+        var objects = canvas.getObjects();
+        for (var i in objects) {
+            objects[i].hasBorders = objects[i].hasControls = false;
+        }
+
+        // Create data URL and start download
+        var dataURL = canvas.toDataURL('image/png');
+        var link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'cowboyified.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Re-enable bounding box and controls
+        for (var i in objects) {
+            objects[i].hasBorders = objects[i].hasControls = true;
+        }
+
+        // Redraw the canvas to show the bounding box and controls again
+        canvas.renderAll();
+    });
+</script>
+</body>
+</html>

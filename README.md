@@ -8,9 +8,11 @@ Cowboyify is a simple web application that allows users to upload an image and a
 - Automatically adds a cowboy hat to the uploaded image
 - Download the modified image
 
+Live at [cowboyify.dbut.dev](https://cowboyify.dbut.dev).
+
 ## How to Use
 
-1. Open the `index.html` file in your web browser.
+1. Open [cowboyify.dbut.dev](https://cowboyify.dbut.dev) (or `index.html` locally).
 2. Click on the "Choose Image" button to select an image from your device.
 3. Once the image is uploaded, a cowboy hat will be added to it.
 4. Click on the "Download Image" button to download the modified image.
